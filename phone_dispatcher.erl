@@ -3,7 +3,8 @@
 
 start() ->
     Phones = [phone:enable() || _ <- lists:seq(1, 5)],
-    spawn(?MODULE, loop, [Phones]).
+    Pid = spawn_link(?MODULE, loop, [Phones]),
+    register(dispatcher, Pid).
 
 rpc(Pid, Request) ->
     Pid ! {self(), Request},
@@ -24,5 +25,5 @@ loop(Phones) ->
             From ! {self(), Phones},
             loop(Phones);
         {From, stop_phones} -> 
-            From ! {self(), [Pid ! stop || Pid <- Phones]}
+            From ! {self(), [phone:stop(Pid) || Pid <- Phones]}
     end.
